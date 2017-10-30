@@ -152,6 +152,39 @@ getXY(double s, double d, const vector<double> &maps_s, const vector<double> &ma
 
 }
 
+const int NO_COLLISION = 0;
+const int IN_LANE_COLLISION = 1;
+const int LANE_CHANGE_COLLISION = 2;
+
+int collision_possible(
+    int lane,
+    double car_s,
+    int prev_size,
+    const vector<vector<double>> &sensor_fusion
+) {
+  for (int i = 0; i < sensor_fusion.size(); i++) {
+    float d = sensor_fusion[i][6];
+
+    if (d < (2 + 4 * lane + 2) && d > (2 + 4 * lane - 2)) {
+      double vx = sensor_fusion[i][3];
+      double vy = sensor_fusion[i][4];
+      double check_speed = sqrt(vx * vx + vy * vy);
+      double check_car_s = sensor_fusion[i][5];
+
+      check_car_s += ((double) prev_size * 0.02 * check_speed);
+
+      if ((check_car_s > car_s) && ((check_car_s - car_s) < 15)) {
+        return IN_LANE_COLLISION;
+      }
+
+      if (abs(check_car_s - car_s) < 15) {
+        return LANE_CHANGE_COLLISION;
+      }
+    }
+  }
+  return NO_COLLISION;
+}
+
 int main() {
   uWS::Hub h;
 
@@ -236,32 +269,43 @@ int main() {
           }
 
           bool too_close = false;
+          bool consider_lane_change = false;
 
-          for (int i = 0; i < sensor_fusion.size(); i++) {
-            float d = sensor_fusion[i][6];
+          if (collision_possible(lane, car_s, prev_size, sensor_fusion) == IN_LANE_COLLISION) {
+            too_close = true;
+            consider_lane_change = true;
+          }
 
-            if (d < (2+4*lane+2) && d > (2+4*lane-2)) {
-              double vx = sensor_fusion[i][3];
-              double vy = sensor_fusion[i][4];
-              double check_speed = sqrt(vx*vx+vy*vy);
-              double check_car_s = sensor_fusion[i][5];
-
-              check_car_s += ((double)prev_size*0.02*check_speed);
-
-              if ((check_car_s > car_s) && ((check_car_s-car_s) < 30)) {
-                too_close = true;
-                if (lane > 0)
-                {
-                  lane = 0;
-                }
+          if (consider_lane_change) {
+            if (lane == 0) {
+              if (collision_possible(1, car_s, prev_size, sensor_fusion) == NO_COLLISION) {
+                lane = 1;
+              }
+            } else if (lane == 1) {
+              if (collision_possible(0, car_s, prev_size, sensor_fusion) == NO_COLLISION) {
+                lane = 0;
+              } else if (collision_possible(2, car_s, prev_size, sensor_fusion) == NO_COLLISION) {
+                lane = 2;
+              }
+            } else if (lane == 2) {
+              if (collision_possible(1, car_s, prev_size, sensor_fusion) == NO_COLLISION) {
+                lane = 1;
               }
             }
           }
 
+
+            // if left lane is safe, then change
+            //    left lane is safe when
+            //        predicted path of lane change doesn't collide with predicted path of another car
+            //          get path of each car and get path of car check if within specific radius
+            // else if right lane is safe, then change
+            // else do nothing
+
           if (too_close) {
-            ref_vel -= 0.224;
+            ref_vel -= 0.424;
           } else if(ref_vel < 49.5) {
-            ref_vel += 0.224;
+            ref_vel += 0.424;
           }
 
           json msgJson;
@@ -362,7 +406,6 @@ int main() {
           }
 
 
-          // TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
 
