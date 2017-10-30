@@ -4,7 +4,7 @@
 >
 > The car transmits its location, along with its sensor fusion data, which estimates the location of all the vehicles on the same side of the road.
 
-![animation](https://media.giphy.com/media/3o6nUYvmyTR3Opn6RW/giphy.gif)
+https://media.giphy.com/media/3o6nUYvmyTR3Opn6RW/giphy.gif
 
 ## Model
 
