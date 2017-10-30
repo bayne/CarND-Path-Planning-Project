@@ -1,13 +1,14 @@
+/*
+ * Majority of this code was copied from the walk-through
+ *
+ * https://www.youtube.com/watch?v=7sI3VHFPP0w
+ */
 #include <fstream>
 #include <math.h>
 #include <uWS/uWS.h>
-#include <chrono>
 #include "spline.h"
-#include <iostream>
 #include <thread>
-#include <vector>
 #include "Eigen-3.3/Eigen/Core"
-#include "Eigen-3.3/Eigen/QR"
 #include "json.hpp"
 
 using namespace std;
