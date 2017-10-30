@@ -4,8 +4,6 @@
 >
 > The car transmits its location, along with its sensor fusion data, which estimates the location of all the vehicles on the same side of the road.
 
-https://media.giphy.com/media/3o6nUYvmyTR3Opn6RW/giphy.gif
-
 ## Model
 
 The simulator provides the following sensor data which we can build our models off of:
